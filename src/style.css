@@ -7,6 +7,7 @@ html,
 body {
     overflow: hidden;
     font-family: sans-serif;
+    color:#333;
 }
 
 .webgl {
@@ -22,8 +23,8 @@ body {
     right: 0;
     bottom: 0;
     display: grid;
-    grid-template-columns: 200px 50px;
-    grid-template-rows: 200px 50px;
+    grid-template-columns: 70px 50px;
+    grid-template-rows: 70px 50px;
     grid-column-gap: 20px;
     grid-row-gap: 20px;
 }
@@ -74,13 +75,14 @@ input[type="range"]::-webkit-slider-thumb {
 
 .angle-block input {
     bottom: 0;
-    left: -75px;
+    right: -75px;
     bottom: 75px;
     transform: rotate(-90deg);
 }
 
 .wind-block {
     grid-area: 2 / 1 / 3 / 2;
+    right:130px;
 }
 
 .input-block label {
@@ -131,4 +133,109 @@ input[type="range"]::-webkit-slider-thumb {
     color: black;
     font-size: 8px;
     height: 40px;
+}
+
+.infobtn {
+    display:block;
+    position:fixed;
+    right:20px;
+    top:20px;
+    z-index: 11;
+    border-radius:100%;
+    width:40px;
+    height:40px;
+    border:0 solid transparent;
+    background-color:#5c5;
+    color:white;
+    font-size:1.5rem;
+}
+
+.modal {
+    display:flex;
+    position:fixed;
+    width:90vw;
+    height:90vh;
+    text-align:center;
+    z-index:10;
+    background-color:#ffffffdd;
+    backdrop-filter: blur(10px);
+    top:5vh;
+    left:4vw;
+    padding:2rem;
+    box-sizing: border-box;
+    transform: translateY(-100vh);
+    transition: all ease-in-out 0.35s;
+    justify-content: center;
+    align-items: center;
+}
+.visible {
+    transform: translateY(0);
+}
+
+.modal h1 {
+    font-size:2rem;
+    margin-bottom:1rem;
+    color:#5c5;
+}
+
+.modal p {
+    font-size:1rem;
+    margin-bottom:1rem;
+}
+.modal ul {
+    margin-bottom:2rem;
+    list-style-type: none;
+}
+.modal li {
+    margin-bottom:0.5rem;
+    font-size:0.8rem;
+}
+.modal h3 {
+    font-size:1.25rem;
+    margin-bottom:1rem;
+}
+.closebtn {
+    padding:0.5rem 1rem;
+    background-color:#5c5;
+    color:white;
+    border:0;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:1rem;
+    transition: background-color 0.2s;
+    margin-bottom:1rem;
+}
+.bullet-container {
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    margin-top:1rem;
+    position: fixed;
+    left:20px;
+    bottom:20px;
+    z-index:3;
+    width:20px;
+    min-height:200px;
+    border:1px solid #f00;
+}
+.bullet {
+    width:10px;
+    height:10px;
+    border-radius:100%;
+    background-color:#5c5;
+    margin:0 5px;
+    cursor:pointer;
+    transition: transform 0.2s;
+}
+
+@media only screen and (min-width: 600px) {
+
+.mobile {
+    display:none;
+}
+}
+@media only screen and (max-width: 600px) {
+    .desktop {
+        display:none;
+    }
 }

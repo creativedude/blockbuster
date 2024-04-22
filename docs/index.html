@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,23 +16,60 @@
 
         gtag('config', 'G-82WW4H09TL');
     </script>
-  <script type="module" crossorigin src="./assets/index-e6657007.js"></script>
-  <link rel="stylesheet" href="./assets/index-95842793.css">
+  <script type="module" crossorigin src="./assets/index-dfb7dd99.js"></script>
+  <link rel="stylesheet" href="./assets/index-a3c2c471.css">
 </head>
+
 <body>
     <canvas class="webgl"></canvas>
+    <button class="infobtn" id="infobtn">i</button>
+    <div class="modal" id="infomodal">
+        <div>
+            <h1>Blockbuster</h1>
+            <p>Destroy the blocks by shooting them with a cannon. The more blocks you destroy, the higher your score
+                will be. The game ends when you run out of blocks or when you run out of ammo.</p>
+            <h3>Controls:</h3>
+            <ul class="mobile">
+                <li>Use the slider to set the angle of the cannon.</li>
+                <li>Use the slider to set the windage of the cannon.</li>
+                <li>Hold the FIRE button to build power to shoot the cannon.</li>
+                <li>Press the RELOAD button to reload the cannon.</li>
+            </ul>
+            <ul class="desktop">
+                <li>Use the direction keys to set windage and angle</li>
+                <li>Hold spacebar to build power and fire</li>
+                <li>Tap spacebar to reload the cannon</li>
+            </ul>
+            <p>Good luck!</p>
+            <button class="closebtn" id="closebtn">Close</button>
+
+            <div>
+                <small>Created from caffeine and curiosity by <a
+                        href="https://creativedude.co.za">creativedude</a></small>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="gameOverModal">
+        <div>
+            <h2>Game Over</h2>
+            <p>Your Score:</p>
+            <h1 id="finScore"></h1>
+            <button class="closebtn" id="restartBtn">Retry</button>
+        </div>
+    </div>
     <div class="score">
         <h3>Level: <span id="levelnr"></span></h3>
         <h1 id="scorenr"></h1>
         <p>Blocks left: <span id="blocknr"></span></p>
+        <p>Multiplier: <span id="multiplier"></span></p>
     </div>
     <div class="controls">
         <div class="angle-block">
-            <input value="0" id="angleInput" type="range" min="0" step="0.01" max="1.57079632679"/>
+            <input value="0" id="angleInput" type="range" min="0" step="0.01" max="1.57079632679" />
         </div>
         <div class="wind-block">
             <!-- <input value="0" id="windageInput" type="range" min="-0.7853" step="0.01" max="0.7853"/> -->
-            <input value="0" id="windageInput" type="range" min="-0.7853" step="0.01" max="0.7853"/>
+            <input value="0" id="windageInput" type="range" min="-0.7853" step="0.01" max="0.7853" />
         </div>
         <div class="fire-block">
             <button class="firebtn" id="firebtn">FIRE</button>
@@ -42,6 +80,11 @@
             <button class="resetbtn" id="resetbtn">Reload</button>
         </div>
     </div>
+    <div id="bullets" class="bullet-container">
+        <div class="bullet"></div>
+        <div id="bulletCounter"></div>
+    </div>
     
 </body>
+
 </html>

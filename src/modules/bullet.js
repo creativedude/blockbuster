@@ -5,7 +5,7 @@ import { metal, plastic } from "./materials";
 import { environmentMapTexture } from "./textures";
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
-const shotheight = 1
+const shotheight = 0.7
 
 export const generateBulletFn = (world, scene, collisionDetector) => {
     const diameter = 0.25
@@ -15,7 +15,7 @@ export const generateBulletFn = (world, scene, collisionDetector) => {
     const bulletBody = new CANNON.Body({
         mass: 2,
         shape: bulletShape,
-        position: new CANNON.Vec3(0, 2.25, 0),
+        position: new CANNON.Vec3(0, shotheight + 0.25, 0),
         material: metal
     })
     bulletBody.allowSleep = false;
@@ -37,17 +37,18 @@ export const generateBulletFn = (world, scene, collisionDetector) => {
     bullet.castShadow = true
     bullet.position.y = shotheight
 
-    bullet.addEventListener('onClick', playsound)
     scene.add(bullet)
 
 
 
     const aimHelper = new THREE.Mesh(
-        new THREE.BoxGeometry(0.025, 0.025, 4),
+        new THREE.BoxGeometry(0.01, 0.01, 6),
         new THREE.MeshStandardMaterial({
             color: '#f00',
-            metalness: 1,
+            metalness: 0.5,
             roughness: 0.4,
+            transparent: true,
+            opacity: 0.5
         })
     )
     aimHelper.position.set(0, shotheight + 0.25, 0)
@@ -84,31 +85,134 @@ export const generateBulletFn = (world, scene, collisionDetector) => {
         shotheight
     }
 }
+const metalMaterial = new THREE.MeshStandardMaterial({
+    metalness: 0.2,
+    color: '#E3AF66',
+    roughness: 0.4,
+    //envMap: environmentMapTexture,
+    envMapIntensity: 0.5
+})
+const woodTextureMap = new THREE.TextureLoader().load('textures/wood.jpg')
 
-export const generateCannonFn = (scene) => {
+woodTextureMap.generateMipmaps = false;
+
+woodTextureMap.minFilter = THREE.NearestFilter;
+woodTextureMap.magFilter = THREE.NearestFilter;
+
+woodTextureMap.repeat.x = 0.1;
+woodTextureMap.repeat.y = 0.1;
+woodTextureMap.wrapS = THREE.MirroredRepeatWrapping;
+woodTextureMap.wrapT = THREE.MirroredRepeatWrapping;
+
+const woodMaterial = new THREE.MeshStandardMaterial({
+    metalness: 0.2,
+    //color: '#574327',
+    roughness: 0.4,
+    map: woodTextureMap,
+    envMap: environmentMapTexture,
+    envMapIntensity: 0.5
+})
+
+const steelMaterial = new THREE.MeshStandardMaterial({
+    metalness: 0.8,
+    color: '#fff',
+    roughness: 0.4,
+    envMap: environmentMapTexture,
+    envMapIntensity: 0.5
+})
+export const generateCannonFn = async (scene) => {
     const loader = new OBJLoader();
 
-    // load a resource
-    loader.load(
-        // resource URL
-        'models/monster.obj',
-        // called when resource is loaded
-        function ( object ) {
-    
-            scene.add( object );
-    
-        },
-        // called when loading is in progresses
-        function ( xhr ) {
-    
-            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-    
-        },
-        // called when loading has errors
-        function ( error ) {
-    
-            console.log( 'An error happened' );
-    
-        }
-    );
+    return new Promise((resolve, reject) => {
+        // load a resource
+        loader.load(
+            // resource URL
+            'models/sightedcannon.obj',
+            // called when resource is loaded
+            function (object) {
+                object.traverse(child => {
+                    if (child.isMesh) {
+                        if (child.name === 'Body1') {
+
+                            child.material = steelMaterial
+                        } else {
+
+                            child.material = metalMaterial
+                        }
+                    }
+                })
+
+                object.castShadow = true
+                object.scale.set(0.15, 0.15, 0.15);
+                object.position.y = shotheight + 0.25
+                object.rotation.z = Math.PI * 2;
+                scene.add(object);
+                resolve(object)
+                //return object;
+
+            },
+            // called when loading is in progresses
+            function (xhr) {
+
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+
+            },
+            // called when loading has errors
+            function (error) {
+
+                console.log('An error happened', error);
+
+            }
+        );
+
+    })
 }
+
+export const generateCannonStandFn = (scene) => {
+        const loader = new OBJLoader();
+    
+        return new Promise((resolve, reject) => {
+            // load a resource
+            loader.load(
+                // resource URL
+                'models/stand.obj',
+                // called when resource is loaded
+                function (object) {
+                    object.traverse(child => {
+                        if (child.isMesh) {
+                            if (child.name.includes('metal')) {
+    
+                                child.material = steelMaterial
+                            } else {
+    
+                                child.material = woodMaterial
+                            }
+                        }
+                    })
+    
+                    object.castShadow = true
+
+                    object.scale.set(0.15, 0.15, 0.15);
+                    object.position.y = shotheight + 0.25
+                    object.rotation.z = Math.PI * 2;
+                    scene.add(object);
+                    resolve(object)
+                    //return object;
+    
+                },
+                // called when loading is in progresses
+                function (xhr) {
+    
+                    console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    
+                },
+                // called when loading has errors
+                function (error) {
+    
+                    console.log('An error happened', error);
+    
+                }
+            );
+    
+        })
+    }

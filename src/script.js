@@ -12,7 +12,7 @@ import { plastic, metal } from './modules/materials'
 import { world } from './modules/world'
 import { scene } from './modules/scene'
 import { playsound, playWinSound } from './modules/sounds'
-import { generateBulletFn } from './modules/bullet'
+import { generateBulletFn, generateCannonFn, generateCannonStandFn } from './modules/bullet'
 
 
 /**
@@ -26,7 +26,6 @@ const gui = new GUI()
 
 var stats = new Stats();
 if (debugMode) {
-    console.log('showing')
     gui.show()
 
     document.body.appendChild(stats.dom);
@@ -40,8 +39,10 @@ if (debugMode) {
  */
 
 let score = 0;
+let scoreMultiplier = 1;
 let level = 0;
 let gameOver = false;
+let ammo = 3;
 
 const sharedParams = {
     bullet: {
@@ -68,9 +69,8 @@ export const collisionDetector = (e) => {
 
         boxArr.map((box, i) => {
             if (e.body === box.body) {
-
-                score = score + (50 * (level + 1));
-                console.log('score', score)
+                scoreMultiplier++;
+                score = score + ((50 * (level + 1)) * scoreMultiplier);
                 setTimeout(() => {
 
                     // Remove body
@@ -125,6 +125,8 @@ gui.add(debugObj, 'levelUp')
  */
 
 const bulletObject = generateBulletFn(world, scene, collisionDetector)
+const cannonObject = await generateCannonFn(scene);
+const cannonStand = await generateCannonStandFn(scene)
 
 const bulletBody = bulletObject.bulletBody
 const bullet = bulletObject.bullet
@@ -144,7 +146,6 @@ const generateTargets = () => {
     let redLikelihood = 0.1 - (level * 0.005);
     let whiteLikelihood = 0.05 + (level * 0.02);
     if (level < 40 && redLikelihood > 0) {
-        console.log('redLikelihood, whiteLikelihood', redLikelihood, whiteLikelihood)
         for (let i = 0; i < sharedParams.plane.length - 8; i++) {
             for (let j = 0; j < sharedParams.plane.width - 1; j++) {
                 const z = - i - 4
@@ -172,18 +173,15 @@ const generateTargets = () => {
     } else {
         gameOver = true
     }
-    console.log('targets', targets)
     if (targets < 1 && redLikelihood > 0) {
-        console.log('not enough targets', boxArr);
 
         clearBoxes();
-        console.log('cleared', boxArr);
         generateTargets();
     } else {
 
-    levelTransition = false
+        levelTransition = false
     }
-    
+
 }
 
 
@@ -296,29 +294,52 @@ let powerValues = {
 };
 let powerGrowthInterval;
 const fireFn = () => {
+    if (!gameOver) {
+        if (bullet.position.x === 0) {
 
-
-    clearInterval(powerGrowthInterval);
-    setTimeout(() => {
-        const button = document.getElementById('firebtn');
-        const scaleFactor = 1; // Increase scale by 0.1 for each count
-        button.style.transform = `scale(${scaleFactor})`;
-    }, 250)
-    getPower();
-    const powX = - 2000 * powerValues.x;
-    const powY = - 2000 * powerValues.y;
-    const powZ = - 2000 * powerValues.z;
-    bulletBody.applyForce(new CANNON.Vec3(powX, powY, powZ), bulletBody.position)
-    power = 0;
-    getPower();
-    //bulletBody.applyForce(new CANNON.Vec3(0, 0, -150), new CANNON.Vec3(0, 0, 0))
+            ammo--;
+            clearInterval(powerGrowthInterval);
+            setTimeout(() => {
+                const button = document.getElementById('firebtn');
+                const scaleFactor = 1; // Increase scale by 0.1 for each count
+                button.style.transform = `scale(${scaleFactor})`;
+            }, 250)
+            getPower();
+            const powX = - 2000 * powerValues.x;
+            const powY = - 2000 * powerValues.y;
+            const powZ = - 2000 * powerValues.z;
+            bulletBody.applyForce(new CANNON.Vec3(powX, powY, powZ), bulletBody.position)
+            power = 0;
+            getPower();
+            //bulletBody.applyForce(new CANNON.Vec3(0, 0, -150), new CANNON.Vec3(0, 0, 0))
+        } else {
+            console.log('bullet not in position, cant fire', bullet.position.x)
+        }
+    }
 }
 
 const resetFn = () => {
-    bulletBody.position.set(0, 1.25, 0)
-    bulletBody.velocity.set(0, 0, 0);
-    bulletBody.angularVelocity.set(0, 0, 0);
+    console.log('resetting')
+    if (!gameOver) {
+        if (scoreMultiplier > 1) ammo++;
+        if (scoreMultiplier > 5) ammo++;
+        if (scoreMultiplier > 10) ammo++;
+        if (ammo <= 0) {
+            gameOver = true
+            showGameOver();
+            console.log('game over')
+            bulletBody.position.set(0, 0.95, 0)
+            bulletBody.velocity.set(0, 0, 0);
+            bulletBody.angularVelocity.set(0, 0, 0);
+            //bulletBody.position.set(0, 0.75, 0)
+        } else {
+            scoreMultiplier = 1;
+            bulletBody.position.set(0, 0.95, 0)
+            bulletBody.velocity.set(0, 0, 0);
+            bulletBody.angularVelocity.set(0, 0, 0);
 
+        }
+    }
     //bulletBody.applyForce(new CANNON.Vec3(0, 0, -150), new CANNON.Vec3(0, 0, 0))
 }
 let angle = 0;
@@ -356,10 +377,10 @@ function startGrowPowerFn(e) {
     powerGrowthInterval = setInterval(growPowerFn, 100);
 }
 const growPowerFn = () => {
-    console.log('growing', power)
-    if (!cooldown) {
+    if (!cooldown && !gameOver) {
         if (bullet.position.x !== 0) {
-            resetFn();
+            //resetFn();
+            console.log('not in place, cant fire')
         } else {
             power += 0.05;
 
@@ -377,6 +398,17 @@ const growPowerFn = () => {
         }
     }
 }
+const restartFn = () => {
+    console.log('restarting')
+    level = -1;
+    score = 0;
+    scoreMultiplier = 1;
+    gameOver = false;
+    //resetFn();
+    ammo = 2;
+    nextLevel();
+    document.getElementById('gameOverModal').classList.remove('visible')
+}
 
 //document.getElementById('powerInput').addEventListener('input', powerFn, false);
 document.getElementById('angleInput').addEventListener('input', angleFn, false);
@@ -390,23 +422,28 @@ document.getElementById("firebtn").addEventListener('touchend', fireFn)
 document.getElementById("firebtn").addEventListener('mouseup', fireFn)
 
 document.getElementById("resetbtn").addEventListener('click', resetFn)
+document.getElementById("restartBtn").addEventListener('click', restartFn)
+
 
 let cooldown = false;
+let inputAccelerator = 0;
 document.addEventListener('keydown', function (event) {
     if (event.keyCode == 40) {
-        if (angle <= 1.57) angle += 0.01;
+        inputAccelerator += 0.005;
+        if (angle <= 1.57) angle += inputAccelerator;
     }
     else if (event.keyCode == 38) {
-
-        if (angle >= -1) angle -= 0.01;
+        inputAccelerator += 0.005;
+        if (angle >= -1) angle -= inputAccelerator;
     }
     else if (event.keyCode == 37) {
-
-        if (windage <= 0.7853) windage += 0.01;
+        inputAccelerator += 0.005;
+        if (windage <= 0.7853) windage += inputAccelerator;
     }
     else if (event.keyCode == 39) {
+        inputAccelerator += 0.005;
 
-        if (windage >= -0.7853) windage -= 0.01;
+        if (windage >= -0.7853) windage -= inputAccelerator;
     }
 
     else if (event.keyCode == 32) {
@@ -417,6 +454,7 @@ document.addEventListener('keydown', function (event) {
 
 
 document.addEventListener('keyup', function (event) {
+    inputAccelerator = 0;
     if (!cooldown) {
         if (event.keyCode == 32) {
 
@@ -442,6 +480,7 @@ const clearBoxes = () => {
 
 let levelTransition = false;
 const nextLevel = () => {
+    ammo++;
     resetFn();
     level++;
 
@@ -470,7 +509,37 @@ const updateDetails = () => {
     document.getElementById('levelnr').innerHTML = level;
     document.getElementById('scorenr').innerHTML = score;
     document.getElementById('blocknr').innerHTML = targets;
+    document.getElementById('multiplier').innerHTML = scoreMultiplier;
+    let bulletHTML = ''
+    // new Array(ammo).map(() => {
+    //     bulletHTML += '<div class="bullet"></div>'
+    // })
+    console.log('bullets: ', ammo, bulletHTML
+    )
+    document.getElementById('bulletCounter').innerHTML = ammo
 }
+
+
+/**
+ * modal
+ */
+document.getElementById('infobtn').addEventListener('click', () => {
+    document.getElementById('infomodal').classList.toggle('visible')
+})
+
+document.getElementById('closebtn').addEventListener('click', () => {
+    document.getElementById('infomodal').classList.remove('visible')
+})
+
+
+const showGameOver = () => {
+    console.log('showing game over')
+    document.getElementById('finScore').innerHTML = score;
+    
+
+    document.getElementById('gameOverModal').classList.toggle('visible')
+}
+
 
 /**
  * Animate
@@ -478,11 +547,13 @@ const updateDetails = () => {
 const clock = new THREE.Clock()
 
 let prevTime = 0;
+
 const tick = () => {
 
     stats.begin();
 
     // monitored code goes here
+
 
 
     const elapsedTime = clock.getElapsedTime()
@@ -500,7 +571,6 @@ const tick = () => {
     // bullet.position.x = bulletBody.position.x
     // bullet.position.y = bulletBody.position.y
     // bullet.position.z = bulletBody.position.z
-
     bullet.position.copy(bulletBody.position)
     if (bullet.position.y < -10) {
         resetFn()
@@ -513,8 +583,6 @@ const tick = () => {
         boxArr[i].mesh.quaternion.copy(boxArr[i].body.quaternion)
 
         if (boxArr[i].mesh.position.y < -10) {
-            console.log('lost box', boxArr[i], boxArr[i].mesh.position.y)
-            console.log(boxArr)
             if (boxArr[i].body.material.name === 'target') { targets--; }
             // Remove body
             boxArr[i].body.removeEventListener('collide', playsound)
@@ -533,8 +601,7 @@ const tick = () => {
         sphereI.mesh.quaternion.copy(sphereI.body.quaternion)
     })
 
-    console.log(targets)
-    if (targets === 0 && !levelTransition && !gameOver) {
+    if (targets === 0 && !levelTransition) {
         levelTransition = true
         //alert('targets done!')
         setTimeout(nextLevel, 1000)
@@ -544,6 +611,14 @@ const tick = () => {
     aimHelper.rotation.x = angle
 
     aimHelper.rotation.y = windage
+    if (cannonObject) {
+        cannonObject.rotation.y = windage + Math.PI;
+        cannonObject.rotation.x = angle
+    }
+    if (cannonStand) {
+        cannonStand.rotation.y = windage + Math.PI;
+    }
+
     powerHelper.position.x = powerValues.x
     powerHelper.position.y = powerValues.y + shotheight + 0.25
     powerHelper.position.z = powerValues.z
@@ -560,8 +635,6 @@ const tick = () => {
     renderer.render(scene, camera)
 
     stats.end();
-
-    //playsound()
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)

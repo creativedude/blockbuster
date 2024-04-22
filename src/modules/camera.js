@@ -15,5 +15,5 @@ camera.position.set(0, 5, 10)
 // cameraFolder.add(camera.position, 'z').min(0).max(80).step(1)
 
 camera.lookAt(new THREE.Vector3(0, 10, -20));
-const heightOffset = 1.2
+const heightOffset = 1.5
 camera.setViewOffset(sizes.width * 3, sizes.height * heightOffset, sizes.width * 1, sizes.height * 0, sizes.width, sizes.height);
