@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creativedude Blockbuster</title>
+    
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-82WW4H09TL"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-82WW4H09TL');
+    </script>
+  <script type="module" crossorigin src="./assets/index-e6657007.js"></script>
+  <link rel="stylesheet" href="./assets/index-95842793.css">
+</head>
+<body>
+    <canvas class="webgl"></canvas>
+    <div class="score">
+        <h3>Level: <span id="levelnr"></span></h3>
+        <h1 id="scorenr"></h1>
+        <p>Blocks left: <span id="blocknr"></span></p>
+    </div>
+    <div class="controls">
+        <div class="angle-block">
+            <input value="0" id="angleInput" type="range" min="0" step="0.01" max="1.57079632679"/>
+        </div>
+        <div class="wind-block">
+            <!-- <input value="0" id="windageInput" type="range" min="-0.7853" step="0.01" max="0.7853"/> -->
+            <input value="0" id="windageInput" type="range" min="-0.7853" step="0.01" max="0.7853"/>
+        </div>
+        <div class="fire-block">
+            <button class="firebtn" id="firebtn">FIRE</button>
+            <!-- <label>Power <span id="angle"></span></label>
+            <input value="0" id="powerInput" type="range" min="0" step="0.1" max="2"/> -->
+        </div>
+        <div class="input-block">
+            <button class="resetbtn" id="resetbtn">Reload</button>
+        </div>
+    </div>
+    
+</body>
+</html>
