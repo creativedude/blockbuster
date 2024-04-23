@@ -227,9 +227,22 @@ input[type="range"]::-webkit-slider-thumb {
     transition: transform 0.2s;
 }
 #bulletCounter {
-    color:#f00;
+    color:#333;
     font-weight:bold;
     font-size:2rem;
+    transition: all ease-in-out 0.2s;
+}
+#bulletCounter.big {
+    font-size:4rem;
+    color:#f00;
+}
+
+#multiplier {
+    transition: all ease-in-out 0.2s;
+}
+#multiplier.big {
+    font-size:2rem;
+    color:#f00;
 }
 
 @media only screen and (min-width: 600px) {

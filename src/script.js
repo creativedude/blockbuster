@@ -8,7 +8,7 @@ import { environmentMapTexture } from './modules/textures'
 import { createsphere, createBox, meshMaterial } from './modules/createObjects'
 import { ambientLight, directionalLight } from './modules/lights'
 import { camera } from './modules/camera'
-import { plastic, metal } from './modules/materials'
+import { inertReactionMaterial } from './modules/materials'
 import { world } from './modules/world'
 import { scene } from './modules/scene'
 import { playsound, playWinSound } from './modules/sounds'
@@ -44,6 +44,9 @@ let level = 0;
 let gameOver = false;
 let ammo = 3;
 
+let boxesHit = 0;
+let hasHitBox = false;
+
 const sharedParams = {
     bullet: {
         diameter: 0.25,
@@ -64,13 +67,12 @@ const sharedParams = {
 
 
 export const collisionDetector = (e) => {
-    if (e.body.material.name === 'target' && e.body.mass !== 0) {
+    console.log(e.body.material.name)
+    if (e.body.material.name === 'targetReactionMaterial' && e.body.mass !== 0) {
         playWinSound(e)
-
         boxArr.map((box, i) => {
             if (e.body === box.body) {
-                scoreMultiplier++;
-                score = score + ((50 * (level + 1)) * scoreMultiplier);
+                hitRedBoxFn(e)
                 setTimeout(() => {
 
                     // Remove body
@@ -86,6 +88,29 @@ export const collisionDetector = (e) => {
     } else {
         playsound(e)
     }
+}
+
+
+const hitRedBoxFn = (e) => {
+    scoreMultiplier++;
+
+    document.getElementById('multiplier').classList.add('big')
+    setTimeout(() => {
+        document.getElementById('multiplier').classList.remove('big')
+    }, 200)
+
+    boxesHit++;
+    hasHitBox = true;
+    if (boxesHit >= 5) {
+        ammo++;
+        boxesHit = 0;
+        document.getElementById('bulletCounter').classList.add('big')
+        setTimeout(() => {
+            document.getElementById('bulletCounter').classList.remove('big')
+        }, 200)
+    }
+    score = score + ((50 * (level + 1)) * scoreMultiplier);
+    updateDetails()
 }
 
 /**
@@ -216,7 +241,7 @@ const floorShape = new CANNON.Box(new CANNON.Vec3(sharedParams.plane.width / 2, 
 const floorBody = new CANNON.Body({
     mass: 0,
     shape: floorShape,
-    material: plastic
+    material: inertReactionMaterial
 })
 floorBody.position.copy(floor.position)
 floorBody.addEventListener('collide', playsound)
@@ -324,20 +349,23 @@ const fireFn = () => {
 const resetFn = () => {
     console.log('resetting')
     if (!gameOver) {
+        boxesHit = 0;
+        if (hasHitBox) {
+            ammo++;
+            hasHitBox = false;
+        }
         console.log('game is not over')
-        if (scoreMultiplier > 1) ammo++;
-        if (scoreMultiplier > 5) ammo++;
-        if (scoreMultiplier > 10) ammo++;
         if (ammo <= 0) {
+
             gameOver = true
             showGameOver();
-            console.log('game over')
+            console.log('game over', ammo)
             //bulletBody.position.set(0, 0.75, 0)
         }
         scoreMultiplier = 1;
-            bulletBody.position.set(0, 0.95, 0)
-            bulletBody.velocity.set(0, 0, 0);
-            bulletBody.angularVelocity.set(0, 0, 0);
+        bulletBody.position.set(0, 0.95, 0)
+        bulletBody.velocity.set(0, 0, 0);
+        bulletBody.angularVelocity.set(0, 0, 0);
     } else {
         console.log('game is over')
         scoreMultiplier = 1;
@@ -409,6 +437,8 @@ const restartFn = () => {
     console.log('restarting')
     level = -1;
     score = 0;
+    boxesHit = 0;
+    hasHitBox = false;
     scoreMultiplier = 1;
     gameOver = false;
     ammo = 2;
@@ -503,7 +533,7 @@ const nextLevel = () => {
     let floorBody = new CANNON.Body({
         mass: 0,
         shape: floorShape,
-        material: plastic,
+        material: inertReactionMaterial,
         position: new CANNON.Vec3(0, -50, - sharedParams.plane.length + 7)
     })
     floorBody.addEventListener('collide', playsound)
@@ -518,7 +548,7 @@ const updateDetails = () => {
     document.getElementById('levelnr').innerHTML = level;
     document.getElementById('scorenr').innerHTML = score;
     document.getElementById('blocknr').innerHTML = targets;
-    document.getElementById('multiplier').innerHTML = scoreMultiplier;
+    document.getElementById('multiplier').innerHTML = 'x' + scoreMultiplier;
     let bulletHTML = ''
     // new Array(ammo).map(() => {
     //     bulletHTML += '<div class="bullet"></div>'
@@ -646,4 +676,5 @@ const tick = () => {
     window.requestAnimationFrame(tick)
 }
 generateTargets();
+updateDetails();
 tick()

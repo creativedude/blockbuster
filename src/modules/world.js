@@ -1,5 +1,5 @@
 import CANNON from "cannon";
-import { contactMaterial, plasticContactMaterial } from "./materials";
+import { defaultContactMaterial, inertContactMaterial, targetContactMaterial } from "./materials";
 
 
 export const world = new CANNON.World()
@@ -11,6 +11,7 @@ world.allowSleep = true;
 
 //materials
 //probably best to stick to just one material, but whatever 
-world.defaultContactMaterial = contactMaterial
-world.addContactMaterial(contactMaterial)
-world.addContactMaterial(plasticContactMaterial)
+world.defaultContactMaterial = defaultContactMaterial
+world.addContactMaterial(defaultContactMaterial)
+world.addContactMaterial(inertContactMaterial)
+world.addContactMaterial(targetContactMaterial)

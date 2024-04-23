@@ -1,30 +1,30 @@
 import CANNON from "cannon";
 
-export const plastic = new CANNON.Material('plastic');
+export const inertReactionMaterial = new CANNON.Material('inertReactionMaterial');
 
-export const target = new CANNON.Material('target')
+export const targetReactionMaterial = new CANNON.Material('targetReactionMaterial')
 
 
-export const concrete = new CANNON.Material('concrete')
-export const metal = new CANNON.Material('metal')
+export const floorReactionMaterial = new CANNON.Material('floorReactionMaterial')
+export const bulletReactionMaterial = new CANNON.Material('bulletReactionMaterial')
 
-export const contactMaterial = new CANNON.ContactMaterial(
-    concrete, plastic,
+export const defaultContactMaterial = new CANNON.ContactMaterial(
+    floorReactionMaterial, inertReactionMaterial,
     {
         friction: 0.9,
         restitution: 0.4
     })
 
 
-    export const plasticContactMaterial = new CANNON.ContactMaterial(
-    plastic, plastic,
+    export const inertContactMaterial = new CANNON.ContactMaterial(
+    inertReactionMaterial, inertReactionMaterial,
     {
         friction: 0.1,
         restitution: 0.7
     })
 
     export const targetContactMaterial = new CANNON.ContactMaterial(
-    metal, target,
+    bulletReactionMaterial, targetReactionMaterial,
     {
         friction: 0.1,
         restitution: 3

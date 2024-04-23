@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import CANNON from 'cannon';
 import { environmentMapTexture } from './textures'
-import { plastic, target, concrete, metal } from './materials';
+import { inertReactionMaterial, targetReactionMaterial} from './materials';
 
 
 const sphereGeo = new THREE.SphereGeometry(1, 16, 16)
@@ -35,7 +35,7 @@ export const createsphere = (spheresArr, world, scene, playsound, radius, positi
         mass: 0.5,
         shape: physShape,
         position: new CANNON.Vec3(0, 3, 0),
-        material: plastic
+        material: inertReactionMaterial
     })
     physBody.position.copy(position)
     physBody.addEventListener('collide', playsound)
@@ -88,7 +88,7 @@ export const createBox = (boxArr, world, scene, playsound, radius, position, mas
         mass: computedMass,
         shape: physShape,
         position: new CANNON.Vec3(0, 3, 0),
-        material: color && !invisible ? target : plastic
+        material: color && !invisible ? targetReactionMaterial : inertReactionMaterial
     })
     physBody.position.copy(position)
     physBody.addEventListener('collide', playsound)
