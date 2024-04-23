@@ -73,12 +73,14 @@ export const collisionDetector = (e) => {
         boxArr.map((box, i) => {
             if (e.body === box.body) {
                 hitRedBoxFn(e)
-                setTimeout(() => {
 
+                setTimeout(() => {
+                    boxArr.splice(i, 1);
                     // Remove body
                     box.body.removeEventListener('collide', playsound)
                     world.removeBody(box.body)
-                    targets--;
+                    //targets--;
+                    updateDetails();
 
                     // Remove mesh
                     scene.remove(box.mesh)
@@ -195,6 +197,7 @@ const generateTargets = () => {
                 }
             }
         }
+        updateDetails();
     } else {
         gameOver = true
     }
@@ -544,6 +547,18 @@ const nextLevel = () => {
 }
 
 const updateDetails = () => {
+    // count Targets 
+    let countedTargets = 0;
+    console.log('counting targets', targets, countedTargets)
+    for (var i = boxArr.length - 1; i >= 0; i--) {
+        if (boxArr[i].body.material.name === 'targetReactionMaterial') {
+            countedTargets++;
+            console.log('+')
+        }
+    }
+    console.log(countedTargets, targets)
+    targets = countedTargets;
+    
     console.log('updating details')
     document.getElementById('levelnr').innerHTML = level;
     document.getElementById('scorenr').innerHTML = score;
@@ -584,7 +599,7 @@ const showGameOver = () => {
 const clock = new THREE.Clock()
 
 let prevTime = 0;
-
+let needsUpdate = false;
 const tick = () => {
 
     stats.begin();
@@ -620,7 +635,13 @@ const tick = () => {
         boxArr[i].mesh.quaternion.copy(boxArr[i].body.quaternion)
 
         if (boxArr[i].mesh.position.y < -10) {
-            if (boxArr[i].body.material.name === 'target') { targets--; }
+            console.log('removing box because it fell off', boxArr[i].body.material.name)
+            if (boxArr[i].body.material.name === 'targetReactionMaterial') { 
+                console.log('a red box fell off', targets)
+                targets--; 
+                console.log('removed red box', targets)
+                needsUpdate = true;
+            }
             // Remove body
             boxArr[i].body.removeEventListener('collide', playsound)
             world.removeBody(boxArr[i].body)
@@ -631,6 +652,10 @@ const tick = () => {
             boxArr.splice(i, 1);
         }
 
+    }
+    if (needsUpdate) {
+        updateDetails();
+        needsUpdate = false;
     }
 
     spheresArr.map(sphereI => {
