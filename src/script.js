@@ -5,7 +5,7 @@ import GUI from 'lil-gui'
 import CANNON, { Vec3 } from 'cannon'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { environmentMapTexture } from './modules/textures'
-import { createsphere, createBox, meshMaterial } from './modules/createObjects'
+import { createsphere, createBox, meshMaterial, createTarget, createAmmoBox } from './modules/createObjects'
 import { ambientLight, directionalLight } from './modules/lights'
 import { camera } from './modules/camera'
 import { inertReactionMaterial } from './modules/materials'
@@ -13,6 +13,7 @@ import { world } from './modules/world'
 import { scene } from './modules/scene'
 import { playsound, playWinSound } from './modules/sounds'
 import { generateBulletFn, generateCannonFn, generateCannonStandFn } from './modules/bullet'
+import { levelData } from './data/data'
 
 
 /**
@@ -67,7 +68,6 @@ const sharedParams = {
 
 
 export const collisionDetector = (e) => {
-    console.log(e.body.material.name)
     if (e.body.material.name === 'targetReactionMaterial' && e.body.mass !== 0) {
         playWinSound(e)
         boxArr.map((box, i) => {
@@ -87,6 +87,26 @@ export const collisionDetector = (e) => {
                 }, 30)
             }
         })
+    } else if (e.body.material.name === 'crateReactionMaterial') {
+        boxArr.map((box, i) => {
+            if (e.body === box.body) {
+
+                ammo++;
+                ammo++;
+                setTimeout(() => {
+                    boxArr.splice(i, 1);
+                    // Remove body
+                    box.body.removeEventListener('collide', playsound)
+                    world.removeBody(box.body)
+                    //targets--;
+                    updateDetails();
+
+                    // Remove mesh
+                    scene.remove(box.mesh)
+                }, 30)
+            }
+        })
+
     } else {
         playsound(e)
     }
@@ -123,23 +143,42 @@ export let boxArr = [];
 const spheresArr = [];
 
 const debugObj = {
-    createBox: () => {
-        for (let i = 0; i < 10; i++) {
-            createBox(boxArr, world, scene, playsound, Math.random() * 0.1, { x: 0, y: 10, z: 0 })
-        }
-    },
     createSphere: () => {
         for (let i = 0; i < 1; i++) {
-            createsphere(spheresArr, world, scene, playsound, Math.random(), { x: 0, y: 10, z: 0 })
+            createsphere(spheresArr, world, scene, Math.random(), { x: 0, y: 10, z: 0 })
         }
+    },
+    createAmmoBox: () => {
+        createAmmoBox(
+            boxArr, world, scene,
+            { x: 0, y: 5.5, z: -3 },
+        )
+    },
+    createWhiteBox: () => {
+        createBox(
+            boxArr, world, scene,
+            0.9,
+            { x: 0, y: 5.5, z: -3 },
+            0.1
+        )
+    },
+    createSteelBox: () => {
+        createBox(
+            boxArr, world, scene,
+            0.9,
+            { x: 0, y: 0.5, z: -3 },
+            0,
+            '#333'
+        )
     },
     levelUp: () => {
         nextLevel()
 
     }
 }
-
-gui.add(debugObj, 'createBox')
+gui.add(debugObj, 'createSteelBox')
+gui.add(debugObj, 'createWhiteBox')
+gui.add(debugObj, 'createAmmoBox')
 gui.add(debugObj, 'createSphere')
 gui.add(debugObj, 'levelUp')
 
@@ -157,10 +196,11 @@ const cannonStand = await generateCannonStandFn(scene)
 
 const bulletBody = bulletObject.bulletBody
 const bullet = bulletObject.bullet
-const aimHelper = bulletObject.aimHelper
+const aimHelperGroup = bulletObject.aimHelperGroup
 const powerHelper = bulletObject.powerHelper
 const shotheight = bulletObject.shotheight
-
+const cannonPuffGroup = bulletObject.cannonPuffGroup
+console.log('aimHelperGroup', aimHelperGroup)
 
 /**
  * targets
@@ -178,21 +218,35 @@ const generateTargets = () => {
                 const z = - i - 4
                 const x = - j + (sharedParams.plane.width / 2) - 1
                 const chance = Math.random();
-                if (chance > 1 - redLikelihood) {
+                if (chance < levelData[level].red) {
                     targets++;
-                    createBox(
-                        boxArr, world, scene, playsound,
+                    createTarget(
+                        boxArr, world, scene,
                         0.9,
                         { x: x, y: 0.5, z: z },
                         0.5,
-                        false,
                         '#f00'
                     )
-                } else if (chance < whiteLikelihood) {
+                } else if (chance < levelData[level].red + levelData[level].ammo) {
+
+                    createAmmoBox(
+                        boxArr, world, scene,
+                        { x: x, y: 0.5, z: z }
+                    )
+                } else if (chance < levelData[level].red + levelData[level].ammo + levelData[level].white) {
                     createBox(
-                        boxArr, world, scene, playsound,
+                        boxArr, world, scene,
                         0.9,
                         { x: x, y: 0.5, z: z },
+                        0.1
+                    )
+                } else if (chance < levelData[level].red + levelData[level].ammo + levelData[level].white + levelData[level].steel) {
+                    createBox(
+                        boxArr, world, scene,
+                        0.9,
+                        { x: x, y: 0.5, z: z },
+                        0,
+                        '#333'
                     )
                 }
             }
@@ -322,10 +376,9 @@ let powerValues = {
 };
 let powerGrowthInterval;
 const fireFn = () => {
-    console.log('firing, gamneover?', gameOver)
     if (!gameOver) {
         if (bullet.position.x === 0) {
-
+            animatePuff = true
             ammo--;
 
             document.getElementById('bulletCounter').innerHTML = ammo
@@ -342,6 +395,10 @@ const fireFn = () => {
             bulletBody.applyForce(new CANNON.Vec3(powX, powY, powZ), bulletBody.position)
             power = 0;
             getPower();
+
+            aimHelperGroup.children.map((sphere, i) => {
+                if (i < 10) sphere.material.opacity = 0;
+            })
             //bulletBody.applyForce(new CANNON.Vec3(0, 0, -150), new CANNON.Vec3(0, 0, 0))
         } else {
             console.log('bullet not in position, cant fire', bullet.position.x)
@@ -350,19 +407,16 @@ const fireFn = () => {
 }
 
 const resetFn = () => {
-    console.log('resetting')
     if (!gameOver) {
         boxesHit = 0;
         if (hasHitBox) {
             ammo++;
             hasHitBox = false;
         }
-        console.log('game is not over')
         if (ammo <= 0) {
 
             gameOver = true
             showGameOver();
-            console.log('game over', ammo)
             //bulletBody.position.set(0, 0.75, 0)
         }
         scoreMultiplier = 1;
@@ -370,7 +424,6 @@ const resetFn = () => {
         bulletBody.velocity.set(0, 0, 0);
         bulletBody.angularVelocity.set(0, 0, 0);
     } else {
-        console.log('game is over')
         scoreMultiplier = 1;
         bulletBody.position.set(0, 0.95, 0)
         bulletBody.velocity.set(0, 0, 0);
@@ -396,7 +449,7 @@ const getPower = () => {
     powerValues.z = z
 
 }
-getPower()
+getPower();
 
 const angleFn = (e) => {
     angle = Number(e.target.value)
@@ -418,7 +471,6 @@ const growPowerFn = () => {
     if (!cooldown && !gameOver) {
         if (bullet.position.x !== 0) {
             //resetFn();
-            console.log('not in place, cant fire')
         } else {
             power += 0.05;
 
@@ -433,11 +485,20 @@ const growPowerFn = () => {
                     cooldown = false;
                 }, 2000)
             }
+            let renderPower = power * 5;
+            console.log('renderPower', renderPower)
+            aimHelperGroup.children.map((sphere, i) => {
+                if (i <= renderPower) {
+                    sphere.material.opacity = renderPower - i;
+                }
+            })
         }
     }
 }
+
+
+
 const restartFn = () => {
-    console.log('restarting')
     level = -1;
     score = 0;
     boxesHit = 0;
@@ -521,45 +582,47 @@ const clearBoxes = () => {
 
 let levelTransition = false;
 const nextLevel = () => {
-    ammo++;
-    resetFn();
-    level++;
+    if (level < 21) {
+        ammo++;
+        resetFn();
+        level++;
 
-    sharedParams.plane.length = 20 + (level * 2);
-    clearBoxes();
-    floorGeometry.dispose();
-    floorGeometry = new THREE.BoxGeometry(sharedParams.plane.width, 100, sharedParams.plane.length)
-    floor.geometry = floorGeometry;
+        sharedParams.plane.length = 20 + (level * 2);
+        clearBoxes();
+        floorGeometry.dispose();
+        floorGeometry = new THREE.BoxGeometry(sharedParams.plane.width, 100, sharedParams.plane.length)
+        floor.geometry = floorGeometry;
 
-    floor.position.z = (- sharedParams.plane.length / 2) + 4;
-    let floorShape = new CANNON.Box(new CANNON.Vec3(sharedParams.plane.width / 2, 100 / 2, 6 / 2));
-    let floorBody = new CANNON.Body({
-        mass: 0,
-        shape: floorShape,
-        material: inertReactionMaterial,
-        position: new CANNON.Vec3(0, -50, - sharedParams.plane.length + 7)
-    })
-    floorBody.addEventListener('collide', playsound)
-    world.add(floorBody)
+        floor.position.z = (- sharedParams.plane.length / 2) + 4;
+        let floorShape = new CANNON.Box(new CANNON.Vec3(sharedParams.plane.width / 2, 100 / 2, 6 / 2));
+        let floorBody = new CANNON.Body({
+            mass: 0,
+            shape: floorShape,
+            material: inertReactionMaterial,
+            position: new CANNON.Vec3(0, -50, - sharedParams.plane.length + 7)
+        })
+        floorBody.addEventListener('collide', playsound)
+        world.add(floorBody)
 
-    generateTargets();
+        generateTargets();
+    }
+    else {
+        gameOver = true;
+        showGameOver()
+        updateDetails();
+    }
 
 }
 
 const updateDetails = () => {
     // count Targets 
     let countedTargets = 0;
-    console.log('counting targets', targets, countedTargets)
     for (var i = boxArr.length - 1; i >= 0; i--) {
         if (boxArr[i].body.material.name === 'targetReactionMaterial') {
             countedTargets++;
-            console.log('+')
         }
     }
-    console.log(countedTargets, targets)
     targets = countedTargets;
-    
-    console.log('updating details')
     document.getElementById('levelnr').innerHTML = level;
     document.getElementById('scorenr').innerHTML = score;
     document.getElementById('blocknr').innerHTML = targets;
@@ -600,12 +663,43 @@ const clock = new THREE.Clock()
 
 let prevTime = 0;
 let needsUpdate = false;
+
+
+
+let animatePuff = false
+let puffState = 0
+const AnimatePuffs = (puffPos) => {
+    console.log('power', power)
+    cannonPuffGroup.position.setZ(
+        0 - 0.15 * puffPos
+    )
+    cannonPuffGroup.scale.set(1 + 0.05 * puffPos, 1 + 0.05 * puffPos, 1 + 0.05 * puffPos)
+
+    cannonPuffGroup.children.map((puff, i) => {
+        //puff.material.opacity = 1 - (puffPos * 0.001)
+        puff.scale.set(1 - (puffPos * 0.025), 1 - (puffPos * 0.025), 1 - (puffPos * 0.025))
+
+    })
+    if (puffPos > 40) {
+        animatePuff = false;
+        puffState = 0;
+
+        cannonPuffGroup.position.setZ(0.1)
+
+        cannonPuffGroup.scale.set(1, 1, 1)
+    }
+}
+
+
 const tick = () => {
 
     stats.begin();
 
     // monitored code goes here
-
+    if (animatePuff === true) {
+        puffState++
+        AnimatePuffs(puffState)
+    }
 
 
     const elapsedTime = clock.getElapsedTime()
@@ -635,11 +729,8 @@ const tick = () => {
         boxArr[i].mesh.quaternion.copy(boxArr[i].body.quaternion)
 
         if (boxArr[i].mesh.position.y < -10) {
-            console.log('removing box because it fell off', boxArr[i].body.material.name)
-            if (boxArr[i].body.material.name === 'targetReactionMaterial') { 
-                console.log('a red box fell off', targets)
-                targets--; 
-                console.log('removed red box', targets)
+            if (boxArr[i].body.material.name === 'targetReactionMaterial') {
+                targets--;
                 needsUpdate = true;
             }
             // Remove body
@@ -670,9 +761,9 @@ const tick = () => {
     }
 
 
-    aimHelper.rotation.x = angle
+    aimHelperGroup.rotation.x = angle
 
-    aimHelper.rotation.y = windage
+    aimHelperGroup.rotation.y = windage
     if (cannonObject) {
         cannonObject.rotation.y = windage + Math.PI;
         cannonObject.rotation.x = angle

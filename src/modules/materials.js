@@ -1,5 +1,7 @@
 import CANNON from "cannon";
 
+import * as THREE from 'three';
+
 export const inertReactionMaterial = new CANNON.Material('inertReactionMaterial');
 
 export const targetReactionMaterial = new CANNON.Material('targetReactionMaterial')
@@ -7,6 +9,12 @@ export const targetReactionMaterial = new CANNON.Material('targetReactionMateria
 
 export const floorReactionMaterial = new CANNON.Material('floorReactionMaterial')
 export const bulletReactionMaterial = new CANNON.Material('bulletReactionMaterial')
+
+
+export const crateReactionMaterial = new CANNON.Material('crateReactionMaterial')
+
+
+import { environmentMapTexture } from './textures'
 
 export const defaultContactMaterial = new CANNON.ContactMaterial(
     floorReactionMaterial, inertReactionMaterial,
@@ -30,3 +38,51 @@ export const defaultContactMaterial = new CANNON.ContactMaterial(
         restitution: 3
     })
 
+    
+
+
+    const woodTextureMap = new THREE.TextureLoader().load('textures/wood.jpg')
+    const crateAlphaMap = new THREE.TextureLoader().load('textures/crateAlpha.jpg')
+
+    woodTextureMap.generateMipmaps = false;
+    
+    woodTextureMap.minFilter = THREE.NearestFilter;
+    woodTextureMap.magFilter = THREE.NearestFilter;
+
+    crateAlphaMap.generateMipmaps = false;
+    crateAlphaMap.minFilter = THREE.NearestFilter;
+    crateAlphaMap.magFilter = THREE.NearestFilter;
+    
+    woodTextureMap.repeat.x = 0.1;
+    woodTextureMap.repeat.y = 0.1;
+    woodTextureMap.wrapS = THREE.MirroredRepeatWrapping;
+    woodTextureMap.wrapT = THREE.MirroredRepeatWrapping;
+    
+    export const woodMaterial = new THREE.MeshStandardMaterial({
+        metalness: 0.2,
+        //color: '#574327',
+        roughness: 0.4,
+        map: woodTextureMap,
+        //envMap: environmentMapTexture,
+        //envMapIntensity: 0.35
+    })
+
+
+    export const crateMaterial = new THREE.MeshStandardMaterial({
+        metalness: 0.2,
+        //color: '#574327',
+        roughness: 0.4,
+        map: woodTextureMap,
+        transparent: true,
+        alphaMap: crateAlphaMap,
+        side: THREE.DoubleSide,
+        envMap: environmentMapTexture,
+        envMapIntensity: 0.5
+    })
+
+    export const bulletMaterial = new THREE.MeshStandardMaterial({
+        metalness: 1,
+        roughness: 0.4,
+        envMap: environmentMapTexture,
+        envMapIntensity: 0.5
+    })
