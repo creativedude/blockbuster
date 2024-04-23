@@ -216,7 +216,6 @@ input[type="range"]::-webkit-slider-thumb {
     z-index:3;
     width:20px;
     min-height:200px;
-    //border:1px solid #f00;
 }
 .bullet {
     width:10px;
