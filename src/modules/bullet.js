@@ -34,6 +34,7 @@ export const generateBulletFn = (world, scene, collisionDetector) => {
             envMapIntensity: 0.5
         })
     )
+    console.log('bullet', bullet)
     bullet.castShadow = true
     bullet.position.y = shotheight
 
@@ -114,11 +115,11 @@ const woodMaterial = new THREE.MeshStandardMaterial({
 })
 
 const steelMaterial = new THREE.MeshStandardMaterial({
-    metalness: 0.8,
+    metalness: 0.9,
     color: '#fff',
-    roughness: 0.4,
+    roughness: 0.2,
     envMap: environmentMapTexture,
-    envMapIntensity: 0.5
+    envMapIntensity: 0.15
 })
 export const generateCannonFn = async (scene) => {
     const loader = new OBJLoader();
@@ -131,9 +132,10 @@ export const generateCannonFn = async (scene) => {
             // called when resource is loaded
             function (object) {
                 object.traverse(child => {
+
+                child.castShadow = true
                     if (child.isMesh) {
                         if (child.name === 'Body1') {
-
                             child.material = steelMaterial
                         } else {
 
@@ -142,7 +144,6 @@ export const generateCannonFn = async (scene) => {
                     }
                 })
 
-                object.castShadow = true
                 object.scale.set(0.15, 0.15, 0.15);
                 object.position.y = shotheight + 0.25
                 object.rotation.z = Math.PI * 2;
@@ -179,6 +180,7 @@ export const generateCannonStandFn = (scene) => {
                 // called when resource is loaded
                 function (object) {
                     object.traverse(child => {
+                        child.castShadow = true
                         if (child.isMesh) {
                             if (child.name.includes('metal')) {
     
@@ -189,9 +191,8 @@ export const generateCannonStandFn = (scene) => {
                             }
                         }
                     })
-    
-                    object.castShadow = true
-
+                    
+                    console.log('object', object)
                     object.scale.set(0.15, 0.15, 0.15);
                     object.position.y = shotheight + 0.25
                     object.rotation.z = Math.PI * 2;

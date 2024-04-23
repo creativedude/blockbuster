@@ -294,10 +294,13 @@ let powerValues = {
 };
 let powerGrowthInterval;
 const fireFn = () => {
+    console.log('firing, gamneover?', gameOver)
     if (!gameOver) {
         if (bullet.position.x === 0) {
 
             ammo--;
+
+            document.getElementById('bulletCounter').innerHTML = ammo
             clearInterval(powerGrowthInterval);
             setTimeout(() => {
                 const button = document.getElementById('firebtn');
@@ -321,6 +324,7 @@ const fireFn = () => {
 const resetFn = () => {
     console.log('resetting')
     if (!gameOver) {
+        console.log('game is not over')
         if (scoreMultiplier > 1) ammo++;
         if (scoreMultiplier > 5) ammo++;
         if (scoreMultiplier > 10) ammo++;
@@ -328,18 +332,21 @@ const resetFn = () => {
             gameOver = true
             showGameOver();
             console.log('game over')
-            bulletBody.position.set(0, 0.95, 0)
-            bulletBody.velocity.set(0, 0, 0);
-            bulletBody.angularVelocity.set(0, 0, 0);
             //bulletBody.position.set(0, 0.75, 0)
-        } else {
-            scoreMultiplier = 1;
+        }
+        scoreMultiplier = 1;
             bulletBody.position.set(0, 0.95, 0)
             bulletBody.velocity.set(0, 0, 0);
             bulletBody.angularVelocity.set(0, 0, 0);
+    } else {
+        console.log('game is over')
+        scoreMultiplier = 1;
+        bulletBody.position.set(0, 0.95, 0)
+        bulletBody.velocity.set(0, 0, 0);
+        bulletBody.angularVelocity.set(0, 0, 0);
 
-        }
     }
+    updateDetails();
     //bulletBody.applyForce(new CANNON.Vec3(0, 0, -150), new CANNON.Vec3(0, 0, 0))
 }
 let angle = 0;
@@ -404,8 +411,9 @@ const restartFn = () => {
     score = 0;
     scoreMultiplier = 1;
     gameOver = false;
-    //resetFn();
     ammo = 2;
+    gameOver = false;
+    resetFn();
     nextLevel();
     document.getElementById('gameOverModal').classList.remove('visible')
 }
@@ -506,6 +514,7 @@ const nextLevel = () => {
 }
 
 const updateDetails = () => {
+    console.log('updating details')
     document.getElementById('levelnr').innerHTML = level;
     document.getElementById('scorenr').innerHTML = score;
     document.getElementById('blocknr').innerHTML = targets;
@@ -514,8 +523,6 @@ const updateDetails = () => {
     // new Array(ammo).map(() => {
     //     bulletHTML += '<div class="bullet"></div>'
     // })
-    console.log('bullets: ', ammo, bulletHTML
-    )
     document.getElementById('bulletCounter').innerHTML = ammo
 }
 
@@ -535,7 +542,7 @@ document.getElementById('closebtn').addEventListener('click', () => {
 const showGameOver = () => {
     console.log('showing game over')
     document.getElementById('finScore').innerHTML = score;
-    
+
 
     document.getElementById('gameOverModal').classList.toggle('visible')
 }
@@ -625,7 +632,6 @@ const tick = () => {
 
     camera.lookAt(bullet.position)
 
-    updateDetails();
 
 
     // work out 
