@@ -3,7 +3,7 @@ import CANNON from "cannon";
 import * as THREE from 'three';
 
 export const inertReactionMaterial = new CANNON.Material('inertReactionMaterial');
-
+export const teeReactionMaterial = new CANNON.Material('teeReactionMaterial');
 export const targetReactionMaterial = new CANNON.Material('targetReactionMaterial')
 
 
@@ -19,8 +19,8 @@ import { environmentMapTexture } from './textures'
 export const defaultContactMaterial = new CANNON.ContactMaterial(
     floorReactionMaterial, inertReactionMaterial,
     {
-        friction: 0.9,
-        restitution: 0.4
+        friction: 0.3,
+        restitution: 0.2
     })
 
 
@@ -28,7 +28,7 @@ export const defaultContactMaterial = new CANNON.ContactMaterial(
     inertReactionMaterial, inertReactionMaterial,
     {
         friction: 0.1,
-        restitution: 0.7
+        restitution: 0.3
     })
 
     export const targetContactMaterial = new CANNON.ContactMaterial(
@@ -38,10 +38,26 @@ export const defaultContactMaterial = new CANNON.ContactMaterial(
         restitution: 3
     })
 
+    export const inertBulletContactMaterial = new CANNON.ContactMaterial(
+        bulletReactionMaterial, inertReactionMaterial,
+        {
+            friction: 0.1,
+            restitution: 0.7           
+        })
+
+
+    export const teeBulletContactMaterial = new CANNON.ContactMaterial(
+        bulletReactionMaterial, teeReactionMaterial,
+        {
+            friction: 0.1,
+            restitution: 0              
+        })
+
     
 
 
     const woodTextureMap = new THREE.TextureLoader().load('textures/wood.jpg')
+    woodTextureMap.colorSpace = THREE.SRGBColorSpace;
     const crateAlphaMap = new THREE.TextureLoader().load('textures/crateAlpha.jpg')
 
     woodTextureMap.generateMipmaps = false;
@@ -59,12 +75,12 @@ export const defaultContactMaterial = new CANNON.ContactMaterial(
     woodTextureMap.wrapT = THREE.MirroredRepeatWrapping;
     
     export const woodMaterial = new THREE.MeshStandardMaterial({
-        metalness: 0.2,
+        metalness: 0.3,
         //color: '#574327',
         roughness: 0.4,
         map: woodTextureMap,
-        //envMap: environmentMapTexture,
-        //envMapIntensity: 0.35
+        envMap: environmentMapTexture,
+        envMapIntensity: 0.4
     })
 
 

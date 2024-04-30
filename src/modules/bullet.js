@@ -1,7 +1,7 @@
 import CANNON from "cannon";
 import * as THREE from 'three';
 import { playWinSound, playsound } from "./sounds";
-import { bulletReactionMaterial, inertReactionMaterial, woodMaterial, bulletMaterial } from "./materials";
+import { bulletReactionMaterial, inertReactionMaterial, teeReactionMaterial, woodMaterial, bulletMaterial } from "./materials";
 import { environmentMapTexture } from "./textures";
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
@@ -125,7 +125,7 @@ export const generateBulletFn = (world, scene, collisionDetector) => {
         mass: 0,
         shape: teeShape,
         position: new CANNON.Vec3(0, shotheight / 2, 0),
-        material: inertReactionMaterial
+        material: teeReactionMaterial
     })
 
     world.add(teeBody)
@@ -142,7 +142,7 @@ const metalMaterial = new THREE.MeshStandardMaterial({
     metalness: 0.2,
     color: '#E3AF66',
     roughness: 0.4,
-    //envMap: environmentMapTexture,
+    envMap: environmentMapTexture,
     envMapIntensity: 0.5
 })
 

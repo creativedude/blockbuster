@@ -5,9 +5,9 @@ import GUI from 'lil-gui'
 import CANNON, { Vec3 } from 'cannon'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { environmentMapTexture } from './modules/textures'
-import { createsphere, createBox, meshMaterial, createTarget, createAmmoBox } from './modules/createObjects'
+import { createsphere, createBox, createTarget, createAmmoBox } from './modules/createObjects'
 import { ambientLight, directionalLight } from './modules/lights'
-import { camera } from './modules/camera'
+import { camera, resetCameraFn } from './modules/camera'
 import { inertReactionMaterial } from './modules/materials'
 import { world } from './modules/world'
 import { scene } from './modules/scene'
@@ -126,10 +126,10 @@ const hitRedBoxFn = (e) => {
     if (boxesHit >= 5) {
         ammo++;
         boxesHit = 0;
-        document.getElementById('bulletCounter').classList.add('big')
-        setTimeout(() => {
-            document.getElementById('bulletCounter').classList.remove('big')
-        }, 200)
+        // document.getElementById('bulletCounter').classList.add('big')
+        // setTimeout(() => {
+        //     document.getElementById('bulletCounter').classList.remove('big')
+        // }, 200)
     }
     score = score + ((50 * (level + 1)) * scoreMultiplier);
     updateDetails()
@@ -159,7 +159,8 @@ const debugObj = {
             boxArr, world, scene,
             0.9,
             { x: 0, y: 5.5, z: -3 },
-            0.1
+            0.1,
+            '#fff'
         )
     },
     createSteelBox: () => {
@@ -209,10 +210,12 @@ let targets = 0;
 //sharedParams.plane.width.length
 
 const generateTargets = () => {
+    console.log('setting up targets')
     targets = 0
-    let redLikelihood = 0.1 - (level * 0.005);
-    let whiteLikelihood = 0.05 + (level * 0.02);
+    let redLikelihood = levelData[level].red;
+    let whiteLikelihood = levelData[level].white;
     if (level < 40 && redLikelihood > 0) {
+        console.log('generating targets')
         for (let i = 0; i < sharedParams.plane.length - 8; i++) {
             for (let j = 0; j < sharedParams.plane.width - 1; j++) {
                 const z = - i - 4
@@ -222,7 +225,7 @@ const generateTargets = () => {
                     targets++;
                     createTarget(
                         boxArr, world, scene,
-                        0.9,
+                        0.7,
                         { x: x, y: 0.5, z: z },
                         0.5,
                         '#f00'
@@ -236,14 +239,15 @@ const generateTargets = () => {
                 } else if (chance < levelData[level].red + levelData[level].ammo + levelData[level].white) {
                     createBox(
                         boxArr, world, scene,
-                        0.9,
+                        0.7,
                         { x: x, y: 0.5, z: z },
-                        0.1
+                        0.1,
+                        '#fff'
                     )
                 } else if (chance < levelData[level].red + levelData[level].ammo + levelData[level].white + levelData[level].steel) {
                     createBox(
                         boxArr, world, scene,
-                        0.9,
+                        0.7,
                         { x: x, y: 0.5, z: z },
                         0,
                         '#333'
@@ -251,16 +255,59 @@ const generateTargets = () => {
                 }
             }
         }
+        if (level >= 20) {
+
+            for (let i = 0; i < sharedParams.plane.length - 8; i++) {
+                for (let j = 0; j < sharedParams.plane.width - 1; j++) {
+                    const z = - i - 4
+                    const x = - j + (sharedParams.plane.width / 2) - 1
+                    const chance = Math.random();
+                    if (chance < levelData[level].red) {
+                        targets++;
+                        createTarget(
+                            boxArr, world, scene,
+                            0.7,
+                            { x: x, y: 1.5, z: z },
+                            0.5,
+                            '#f00'
+                        )
+                    } else if (chance < levelData[level].red + levelData[level].ammo) {
+
+                        createAmmoBox(
+                            boxArr, world, scene,
+                            { x: x, y: 1.5, z: z }
+                        )
+                    } else if (chance < levelData[level].red + levelData[level].ammo + levelData[level].white) {
+                        createBox(
+                            boxArr, world, scene,
+                            0.7,
+                            { x: x, y: 1.5, z: z },
+                            0.1,
+                            '#fff'
+                        )
+                    } else if (chance < levelData[level].red + levelData[level].ammo + levelData[level].white + levelData[level].steel) {
+                        createBox(
+                            boxArr, world, scene,
+                            0.7,
+                            { x: x, y: 1.5, z: z },
+                            0,
+                            '#333'
+                        )
+                    }
+                }
+            }
+        }
         updateDetails();
     } else {
+        console.log('game over while setting up targets', level, redLikelihood)
         gameOver = true
     }
     if (targets < 1 && redLikelihood > 0) {
-
+        console.log('no targets, generating targets again')
         clearBoxes();
         generateTargets();
     } else {
-
+        console.log('targets generated, continuing')
         levelTransition = false
     }
 
@@ -375,13 +422,15 @@ let powerValues = {
     z: 0
 };
 let powerGrowthInterval;
+let isFiring = false;
 const fireFn = () => {
     if (!gameOver) {
         if (bullet.position.x === 0) {
+            isFiring = true;
             animatePuff = true
             ammo--;
-
-            document.getElementById('bulletCounter').innerHTML = ammo
+            updateDetails();
+            //document.getElementById('bulletCounter').innerHTML = ammo
             clearInterval(powerGrowthInterval);
             setTimeout(() => {
                 const button = document.getElementById('firebtn');
@@ -405,9 +454,10 @@ const fireFn = () => {
         }
     }
 }
-
 const resetFn = () => {
+    resetCameraFn();
     if (!gameOver) {
+        isFiring = false;
         boxesHit = 0;
         if (hasHitBox) {
             ammo++;
@@ -582,7 +632,8 @@ const clearBoxes = () => {
 
 let levelTransition = false;
 const nextLevel = () => {
-    if (level < 21) {
+    console.log('setting up next level')
+    if (level < 41) {
         ammo++;
         resetFn();
         level++;
@@ -603,7 +654,7 @@ const nextLevel = () => {
         })
         floorBody.addEventListener('collide', playsound)
         world.add(floorBody)
-
+        console.log('pre generate target')
         generateTargets();
     }
     else {
@@ -614,6 +665,7 @@ const nextLevel = () => {
 
 }
 
+const bulletContainer = document.getElementById('bullets');
 const updateDetails = () => {
     // count Targets 
     let countedTargets = 0;
@@ -628,10 +680,18 @@ const updateDetails = () => {
     document.getElementById('blocknr').innerHTML = targets;
     document.getElementById('multiplier').innerHTML = 'x' + scoreMultiplier;
     let bulletHTML = ''
-    // new Array(ammo).map(() => {
-    //     bulletHTML += '<div class="bullet"></div>'
-    // })
-    document.getElementById('bulletCounter').innerHTML = ammo
+    //document.getElementById('bulletCounter').innerHTML = ammo;
+    if (bulletContainer && bulletContainer.children.length !== ammo) {
+        console.log('net enough ammo shown')
+        bulletContainer.innerHTML = '';
+        console.log(bulletContainer)
+        for (let i = 0; i < ammo; i++) {
+
+            const newDiv = document.createElement("div");
+            newDiv.className = 'bullet';
+            bulletContainer.appendChild(newDiv);
+        }
+    }
 }
 
 
@@ -718,8 +778,11 @@ const tick = () => {
     // bullet.position.y = bulletBody.position.y
     // bullet.position.z = bulletBody.position.z
     bullet.position.copy(bulletBody.position)
-    if (bullet.position.y < -10) {
+    if (bullet.position.y < -3) {
         resetFn()
+    }
+    if (isFiring ) {
+        camera.position.set(bullet.position.x + Math.sin(5), bullet.position.y, bullet.position.z - 10 )
     }
 
 

@@ -2,25 +2,42 @@ import * as THREE from 'three'
 import CANNON from 'cannon';
 import { environmentMapTexture } from './textures'
 import { playsound, playWinSound } from './sounds';
-import { inertReactionMaterial, targetReactionMaterial, woodMaterial, crateMaterial, bulletMaterial, crateReactionMaterial} from './materials';
+import { inertReactionMaterial, targetReactionMaterial, woodMaterial, crateMaterial, bulletMaterial, crateReactionMaterial } from './materials';
 
 
 const sphereGeo = new THREE.SphereGeometry(1, 16, 16)
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
 
-export const meshMaterial = new THREE.MeshStandardMaterial({
+
+const whiteMaterial = new THREE.MeshStandardMaterial({
     metalness: 0.3,
+    color: '#fff',
     roughness: 0.4,
     envMap: environmentMapTexture,
     envMapIntensity: 0.5
 })
 
+const redMaterial = new THREE.MeshStandardMaterial({
+    metalness: 0.3,
+    color: '#f00',
+    roughness: 0.4,
+    envMap: environmentMapTexture,
+    envMapIntensity: 0.5
+})
+
+const greyMaterial = new THREE.MeshStandardMaterial({
+    metalness: 0.3,
+    color: '#333',
+    roughness: 0.4,
+    envMap: environmentMapTexture,
+    envMapIntensity: 0.5
+})
 
 export const createsphere = (spheresArr, world, scene, radius, position) => {
     // create 3js mesh
     const mesh = new THREE.Mesh(
         sphereGeo,
-        meshMaterial
+        whiteMaterial
     )
 
     mesh.castShadow = true
@@ -51,12 +68,24 @@ export const createsphere = (spheresArr, world, scene, radius, position) => {
 }
 
 
+
 export const createBox = (boxArr, world, scene, radius, position, mass, color) => {
 
     // create 3js mesh
     let mesh
-    if (color) {
-        const newmeshMaterial = new THREE.MeshStandardMaterial({
+    if (color === '#fff') {
+        mesh = new THREE.Mesh(
+            boxGeo,
+            whiteMaterial
+        )
+    } else if (color='#333') {
+
+        mesh = new THREE.Mesh(
+            boxGeo,
+            greyMaterial
+        )
+    } else {
+        const customMaterial = new THREE.MeshStandardMaterial({
             metalness: 0.3,
             roughness: 0.4,
             envMap: environmentMapTexture,
@@ -66,24 +95,18 @@ export const createBox = (boxArr, world, scene, radius, position, mass, color) =
 
         mesh = new THREE.Mesh(
             boxGeo,
-            newmeshMaterial
-        )
-    } else {
-
-        mesh = new THREE.Mesh(
-            boxGeo,
-            meshMaterial
+            customMaterial
         )
     }
-        mesh.castShadow = true
-        mesh.position.copy(position)
-        mesh.scale.set(radius, radius, radius)
+    mesh.castShadow = true
+    mesh.position.copy(position)
+    mesh.scale.set(radius, radius, radius)
 
-        scene.add(mesh)
+    scene.add(mesh)
 
     // create physics body
-    let computedMass = mass === undefined || mass === null ? 0.1 : mass
-    
+    let computedMass = mass //=== undefined || mass === null ? 0.1 : mass
+
 
     const physShape = new CANNON.Box(new CANNON.Vec3(radius / 2, radius / 2, radius / 2));
     const physBody = new CANNON.Body({
@@ -107,27 +130,10 @@ export const createBox = (boxArr, world, scene, radius, position, mass, color) =
 export const createTarget = (boxArr, world, scene, radius, position, mass, color) => {
 
     // create 3js mesh
-    let mesh
-    if (color) {
-        const newmeshMaterial = new THREE.MeshStandardMaterial({
-            metalness: 0.3,
-            roughness: 0.4,
-            envMap: environmentMapTexture,
-            envMapIntensity: 0.5,
-            color: color
-        })
-
-        mesh = new THREE.Mesh(
-            boxGeo,
-            newmeshMaterial
-        )
-    } else {
-
-        mesh = new THREE.Mesh(
-            boxGeo,
-            meshMaterial
-        )
-    }
+    const mesh = new THREE.Mesh(
+        boxGeo,
+        redMaterial
+    )
     mesh.castShadow = true
     mesh.position.copy(position)
     mesh.scale.set(radius, radius, radius)
@@ -179,7 +185,7 @@ export const createAmmoBox = (boxArr, world, scene, position) => {
 
     scene.add(ammoBox)
 
-    let computedMass =  0.5
+    let computedMass = 0.5
 
     const physShape = new CANNON.Box(new CANNON.Vec3(1 / 2, 1 / 2, 1 / 2));
     const physBody = new CANNON.Body({

@@ -6,6 +6,9 @@ const sizes = {
 }
 export const camera = new THREE.PerspectiveCamera(56, sizes.width / sizes.height, 0.1, 100)
 
+export const resetCameraFn = () => {
+    camera.position.set(0, 5, 10)
+}
 
 //const camera = new THREE.PerspectiveCamera(56, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(0, 5, 10)
